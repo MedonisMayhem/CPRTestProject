@@ -1,43 +1,48 @@
 #include <iostream>
 #include <cpr\cpr.h>
+#include <vector>
 
 int main() {
-    std::string foo;
-    std::cin >> foo;
-
-    std::string animal;
-    std::cin >> animal;
-
-    std::string bar;
-    std::cin >> bar;
-
-
-    std::cout << "post or get" << std::endl;
-    std::string command;
-    std::cin >> command;
-
-
     cpr::Response request;
     std::string url = "http://httpbin.org/";
 
-    bool unfound;
+    std::vector<cpr::Pair> pair;
+
+    bool unfound = true;
+    std::cout << "Please. Input key and value:" << std::endl;
     do
     {
-        unfound = false;
-        if(command == "post")
+        std::string key;
+        std::string value;
+        std::cin >> key >> value;
+
+        pair.push_back(cpr::Pair((std::string)key,(std::string)value));
+
+        if(pair[pair.size()-1].key == "post" || pair[pair.size()-1].key == "get")
         {
-            request = cpr::Post(cpr::Url(url + command),
-                                cpr::Multipart{{"foo", foo}, {"animal", animal}, {"bar", bar}});
-        }
-        else if (command == "get")
-        {
-            request = cpr::Get(cpr::Url(url + "get?foo=" + foo + "&animal=" + animal + "&bar=" + bar));
-        }
-        else
-        {
-            unfound = true;
+            unfound = false;
         }
     } while(unfound);
+
+    if(pair[pair.size()-1].key == "post")
+    {
+        request = cpr::Post(cpr::Url(url + "post"),
+                            cpr::Payload(pair.begin(), pair.end()));
+    }
+    else if (pair[pair.size()-1].key == "get")
+    {
+        std::string quest = "get?";
+        for(auto&& str : pair)
+            quest+= str.key + "=" + str.value + "&";
+        quest.pop_back();
+
+        std::cout << quest << std::endl;
+        request = cpr::Get(cpr::Url(url + quest));
+    }
+    else
+    {
+        std::cerr << "Wrong! Incorrect work with the vector index." << std::endl;
+    }
 
     std::cout << request.text << std::endl;
 }
